@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de Maestra</title>
+    <title>Asistente Docente</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
@@ -393,8 +393,8 @@
     <div class="header">
         <div class="container">
             <div class="header-content">
-                <h1>📚 Asistente de Maestra</h1>
-                <p>Tu compañero para planificaciones, exámenes y actividades</p>
+                <h1>📚 Asistente Docente</h1>
+                <p>Tu apoyo para planificaciones, evaluaciones y actividades</p>
             </div>
         </div>
     </div>
@@ -408,16 +408,16 @@
         </div>
 
         <div class="nav-buttons">
-            <button class="nav-btn active" onclick="cambiarSeccion('planificacion')">📋 Planificación</button>
-            <button class="nav-btn inactive" onclick="cambiarSeccion('examen')">✏️ Exámenes</button>
-            <button class="nav-btn inactive" onclick="cambiarSeccion('actividades')">🎨 Actividades</button>
-            <button class="nav-btn inactive" onclick="cambiarSeccion('tareas')">✓ Mis Tareas</button>
+            <button class="nav-btn active" onclick="cambiarSeccion('planificacion', this)">📋 Planificación</button>
+            <button class="nav-btn inactive" onclick="cambiarSeccion('examen', this)">✏️ Evaluaciones</button>
+            <button class="nav-btn inactive" onclick="cambiarSeccion('actividades', this)">🎨 Actividades</button>
+            <button class="nav-btn inactive" onclick="cambiarSeccion('tareas', this)">✓ Mis Tareas</button>
         </div>
 
         <!-- Sección Generadores -->
         <div id="generadores" class="section active">
             <div class="content">
-                <h2>Información Básica</h2>
+                <h2>Información Básica de la Clase</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Materia</label>
@@ -428,23 +428,39 @@
                         <input type="text" id="tema" placeholder="Ej: Composición de verbos, Fracciones...">
                     </div>
                     <div class="form-group">
-                        <label>Nivel</label>
+                        <label>Grado</label>
                         <select id="nivel">
                             <option value="">Selecciona...</option>
-                            <option value="Primaria 1-3">Primaria 1º-3º</option>
-                            <option value="Primaria 4-6">Primaria 4º-6º</option>
-                            <option value="Secundaria (7º-11º)">Secundaria (7º-11º)</option>
+                            <option value="Primaria - 1º grado">Primaria - 1º grado</option>
+                            <option value="Primaria - 2º grado">Primaria - 2º grado</option>
+                            <option value="Primaria - 3º grado">Primaria - 3º grado</option>
+                            <option value="Primaria - 4º grado">Primaria - 4º grado</option>
+                            <option value="Primaria - 5º grado">Primaria - 5º grado</option>
+                            <option value="Primaria - 6º grado">Primaria - 6º grado</option>
+                            <option value="Secundaria - 7º año">Secundaria - 7º año</option>
+                            <option value="Secundaria - 8º año">Secundaria - 8º año</option>
+                            <option value="Secundaria - 9º año">Secundaria - 9º año</option>
+                            <option value="Secundaria - 10º año">Secundaria - 10º año</option>
+                            <option value="Secundaria - 11º año">Secundaria - 11º año</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Cantidad de estudiantes</label>
-                        <input type="number" id="cantidad" placeholder="Ej: 25">
+                        <input type="number" id="cantidad" min="1" max="100" placeholder="Ej: 25">
+                    </div>
+                    <div class="form-group">
+                        <label>Duración de la clase</label>
+                        <select id="duracion">
+                            <option value="40 minutos">40 minutos</option>
+                            <option value="80 minutos">80 minutos</option>
+                            <option value="120 minutos">120 minutos</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="button-group">
                     <button class="btn-primary" onclick="generarContenido('planificacion')" id="btn-planificacion">📋 Generar Planificación</button>
-                    <button class="btn-primary" onclick="generarContenido('examen')" id="btn-examen">✏️ Generar Examen</button>
+                    <button class="btn-primary" onclick="generarContenido('examen')" id="btn-examen">✏️ Generar Evaluación</button>
                     <button class="btn-primary" onclick="generarContenido('actividades')" id="btn-actividades">🎨 Sugerir Actividades</button>
                 </div>
 
@@ -474,13 +490,20 @@
     </div>
 
     <div class="footer">
-        💡 Recuerda: Este asistente te ayuda a ahorrar tiempo, pero tu experiencia y criterio profesional son lo más importante.
+        💡 Recuerda: Este asistente ayuda a ahorrar tiempo, pero el criterio profesional docente es lo más importante.
     </div>
 
     <script>
-        let tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+        let tareas = [];
         let resultadoActual = '';
         let appsScriptUrl = localStorage.getItem('appsScriptUrl') || '';
+
+        try {
+            const tareasGuardadas = JSON.parse(localStorage.getItem('tareas') || '[]');
+            tareas = Array.isArray(tareasGuardadas) ? tareasGuardadas : [];
+        } catch (error) {
+            localStorage.removeItem('tareas');
+        }
 
         // Verificar si tenemos URL configurada
         window.addEventListener('load', function() {
@@ -495,8 +518,17 @@
                 alert('Por favor pega la URL del Google Apps Script');
                 return;
             }
-            if (!url.includes('script.google.com')) {
-                alert('URL inválida. Debe ser una URL de Google Apps Script');
+            let direccion;
+            try {
+                direccion = new URL(url);
+            } catch (error) {
+                alert('URL inválida. Pega la URL completa del Google Apps Script');
+                return;
+            }
+            if (direccion.protocol !== 'https:' ||
+                direccion.hostname !== 'script.google.com' ||
+                !direccion.pathname.endsWith('/exec')) {
+                alert('URL inválida. Debe ser la URL HTTPS del despliegue de Google Apps Script terminada en /exec');
                 return;
             }
             appsScriptUrl = url;
@@ -505,14 +537,14 @@
             alert('URL guardada correctamente');
         }
 
-        function cambiarSeccion(seccion) {
+        function cambiarSeccion(seccion, boton) {
             // Actualizar botones de navegación
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
                 btn.classList.add('inactive');
             });
-            event.target.classList.add('active');
-            event.target.classList.remove('inactive');
+            boton.classList.add('active');
+            boton.classList.remove('inactive');
 
             // Actualizar secciones
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -521,7 +553,6 @@
                 document.getElementById('tareas-content').classList.add('active');
             } else {
                 document.getElementById('generadores').classList.add('active');
-                document.getElementById('btn-' + seccion).click();
             }
         }
 
@@ -529,15 +560,21 @@
             const materia = document.getElementById('materia').value.trim();
             const tema = document.getElementById('tema').value.trim();
             const nivel = document.getElementById('nivel').value.trim();
+            const cantidad = document.getElementById('cantidad').value;
 
             if (!materia || !tema || !nivel) {
-                alert('Por favor completa: Materia, Tema y Nivel');
+                alert('Por favor completa: Materia, Tema y Grado');
                 return false;
             }
             
             if (!appsScriptUrl) {
                 alert('Por favor configura primero la URL del Google Apps Script');
                 document.getElementById('setupWarning').classList.add('show');
+                return false;
+            }
+
+            if (cantidad && (Number(cantidad) < 1 || Number(cantidad) > 100)) {
+                alert('La cantidad de estudiantes debe estar entre 1 y 100');
                 return false;
             }
             
@@ -551,6 +588,7 @@
             const tema = document.getElementById('tema').value;
             const nivel = document.getElementById('nivel').value;
             const cantidad = document.getElementById('cantidad').value || '';
+            const duracion = document.getElementById('duracion').value;
 
             // Mostrar loading
             const btn = document.getElementById('btn-' + tipo);
@@ -562,18 +600,23 @@
                 // Llamar al Google Apps Script
                 const response = await fetch(appsScriptUrl, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         tipo: tipo,
                         materia: materia,
                         tema: tema,
                         nivel: nivel,
-                        cantidad: cantidad
+                        cantidad: cantidad,
+                        duracion: duracion
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error('El servicio respondió con estado ' + response.status);
+                }
                 const data = await response.json();
 
-                if (data.success) {
+                if (data.success && typeof data.contenido === 'string') {
                     resultadoActual = data.contenido;
                     document.getElementById('resultado-texto').textContent = data.contenido;
                     document.getElementById('resultado').style.display = 'block';
@@ -592,9 +635,11 @@
         function descargarResultado() {
             const elemento = document.createElement('a');
             const archivo = new Blob([resultadoActual], { type: 'text/plain;charset=utf-8' });
-            elemento.href = URL.createObjectURL(archivo);
+            const url = URL.createObjectURL(archivo);
+            elemento.href = url;
             elemento.download = `contenido-${new Date().toISOString().split('T')[0]}.txt`;
             elemento.click();
+            URL.revokeObjectURL(url);
         }
 
         function agregarTarea() {
@@ -626,18 +671,36 @@
 
         function renderizarTareas() {
             const lista = document.getElementById('task-list');
+            lista.replaceChildren();
             if (tareas.length === 0) {
-                lista.innerHTML = '<div class="empty-state">No hay tareas aún. ¡Agrega una para organizar tu día!</div>';
+                const vacio = document.createElement('div');
+                vacio.className = 'empty-state';
+                vacio.textContent = 'No hay tareas aún. ¡Agrega una para organizar tu día!';
+                lista.appendChild(vacio);
                 return;
             }
 
-            lista.innerHTML = tareas.map(tarea => `
-                <div class="task-item ${tarea.completada ? 'completed' : ''}">
-                    <input type="checkbox" ${tarea.completada ? 'checked' : ''} onchange="toggleTarea(${tarea.id})">
-                    <span>${tarea.texto}</span>
-                    <button onclick="eliminarTarea(${tarea.id})">✕</button>
-                </div>
-            `).join('');
+            tareas.forEach(tarea => {
+                const item = document.createElement('div');
+                item.className = 'task-item' + (tarea.completada ? ' completed' : '');
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = Boolean(tarea.completada);
+                checkbox.addEventListener('change', () => toggleTarea(tarea.id));
+
+                const texto = document.createElement('span');
+                texto.textContent = String(tarea.texto || '');
+
+                const eliminar = document.createElement('button');
+                eliminar.type = 'button';
+                eliminar.textContent = '✕';
+                eliminar.setAttribute('aria-label', 'Eliminar tarea');
+                eliminar.addEventListener('click', () => eliminarTarea(tarea.id));
+
+                item.append(checkbox, texto, eliminar);
+                lista.appendChild(item);
+            });
         }
 
         function guardarTareas() {
